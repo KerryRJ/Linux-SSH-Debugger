@@ -78,7 +78,8 @@ namespace LinuxSSHDebugger
             using (var process = new Process())
             {
                 process.StartInfo =
-                    new("dotnet", $"publish -c {configuration} -r linux-arm --self-contained=false -o {publishFolder}")
+                    new("dotnet", $"publish {project.FullPath} -c {configuration} -o {publishFolder}")
+                    //new("dotnet", $"publish -c {configuration} -r linux-arm --self-contained false -o {publishFolder}")
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
@@ -218,7 +219,7 @@ namespace LinuxSSHDebugger
 
                 await outputPane.WriteLineAsync($"SCP: Transferring files");
                 var directoryInfo = new DirectoryInfo($"{publishFolder}");
-                using (var scp = new ScpClient(general.SshHost, general.SshPortNumber, general.SshUser, privateKeys))
+                using (var scp = new ScpClient(general.SshHost, general.SshPortNumber, general.SshUser, privateKeys) { KeepAliveInterval = TimeSpan.FromSeconds(15), OperationTimeout = TimeSpan.FromSeconds(15) })
                 {
                     try
                     {
