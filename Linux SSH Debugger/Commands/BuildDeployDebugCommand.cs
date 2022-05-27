@@ -79,7 +79,6 @@ namespace LinuxSSHDebugger
             {
                 process.StartInfo =
                     new("dotnet", $"publish {project.FullPath} -c {configuration} -o {publishFolder}")
-                    //new("dotnet", $"publish -c {configuration} -r linux-arm --self-contained false -o {publishFolder}")
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
