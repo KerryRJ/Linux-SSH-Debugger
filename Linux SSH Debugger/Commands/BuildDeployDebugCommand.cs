@@ -1,7 +1,9 @@
 ﻿using Microsoft.VisualStudio.TaskStatusCenter;
+using Microsoft.VisualStudio.Threading;
 using Renci.SshNet;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -32,10 +34,13 @@ namespace LinuxSSHDebugger
             var outputPane = LinuxSSHDebuggerPackage.PackageOutputPane;
 
             var project = await VS.Solutions.GetActiveProjectAsync();
+            if (project == null)
+            {
+                await outputPane.WriteLineAsync($"No project is active");
+                throw new ArgumentNullException("project", "No project is active");
+            }
 
-            project.GetItemInfo(out Microsoft.VisualStudio.Shell.Interop.IVsHierarchy hierarchy, out _, out _);
-            var isNetProject = hierarchy.IsCapabilityMatch(".NET");
-            if (!isNetProject)
+            if (!project.IsCapabilityMatch(".NET"))
             {
                 await outputPane.WriteLineAsync($"Project {project.Name} is not .NET");
                 return;
@@ -146,17 +151,15 @@ namespace LinuxSSHDebugger
 
                 // Install/Upgrade dotnet
                 await outputPane.WriteLineAsync($"NET: Verify installation");
-                var deployment = string.Empty;
-                switch (general.RemoteNETDeployment)
+                var deployment = "--runtime ";
+                
+                if (project.IsCapabilityMatch("DotNetCoreWeb"))
                 {
-                    case Deployments.AspNetRuntime:
-                        deployment = "--runtime aspnetcore";
-                        break;
-                    case Deployments.Runtime:
-                        deployment = "--runtime dotnet";
-                        break;
-                    default:
-                        break;
+                    deployment += "aspnetcore";
+                }
+                else
+                {
+                    deployment += "dotnet";
                 }
                 result = await ssh.CreateCommand($"curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel Current {deployment} --install-dir {general.RemoteNETInstallationFolder}").ExecuteAsync();
                 if (!(result.EndsWith("dotnet-install: Installation finished successfully.") || result.EndsWith("is already installed.")))

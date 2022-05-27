@@ -49,13 +49,6 @@ namespace LinuxSSHDebugger
         [DefaultValue("~/.dotnet")]
         public string RemoteNETInstallationFolder { get; set; } = "~/.dotnet";
 
-        [Category(".NET")]
-        [DisplayName("Deploy")]
-        [Description("The .NET deployment on the remote device.")]
-        [TypeConverter(typeof(EnumConverter))]
-        [DefaultValue(Deployments.Runtime)]
-        public Deployments RemoteNETDeployment { get; set; } = Deployments.Runtime;
-
         [Category("Visual Studio Debugger")]
         [DisplayName("Installation Folder")]
         [Description("The Visual Studio Debugger installation folder on the remote device i.e. ~/.vsdbg")]
