@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TaskStatusCenter;
+﻿using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.TaskStatusCenter;
 using Microsoft.VisualStudio.Threading;
 using Renci.SshNet;
 using System.Diagnostics;
@@ -32,14 +33,20 @@ namespace LinuxSSHDebugger
         private async Task BuildPublishDebugAsync(TaskProgressData taskProgressData, ITaskHandler taskHandler)
         {
             var outputPane = LinuxSSHDebuggerPackage.PackageOutputPane;
+            await Package.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+            var buildManager = await VS.Services.GetSolutionBuildManagerAsync();
             var project = await VS.Solutions.GetActiveProjectAsync();
+            if (ErrorHandler.Succeeded(buildManager.get_StartupProject(out Microsoft.VisualStudio.Shell.Interop.IVsHierarchy startupProject)))
+            {
+                project = (Project)await SolutionItem.FromHierarchyAsync(startupProject, (uint)VSConstants.VSITEMID.Root);
+            }
             if (project == null)
             {
-                await outputPane.WriteLineAsync($"No project is active");
-                throw new ArgumentNullException("project", "No project is active");
+                await outputPane.WriteLineAsync($"A startup project is not set or no project is currently active");
+                throw new ArgumentNullException("project", "A startup project is not set or no project is currently active");
             }
-
+            
             if (!project.IsCapabilityMatch(".NET"))
             {
                 await outputPane.WriteLineAsync($"Project {project.Name} is not .NET");
