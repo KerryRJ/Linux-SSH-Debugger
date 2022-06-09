@@ -20,7 +20,7 @@ namespace LinuxSSHDebugger
 
             var options = default(TaskHandlerOptions);
             options.Title = "Linux SSH Debugger";
-            options.DisplayTaskDetails = (t) => { t.FireAndForget(); };
+            options.DisplayTaskDetails = (t) => t.FireAndForget();
             options.ActionsAfterCompletion = CompletionActions.RetainAndNotifyOnFaulted;
 
             TaskProgressData data = default;
@@ -43,10 +43,10 @@ namespace LinuxSSHDebugger
             }
             if (project == null)
             {
-                await outputPane.WriteLineAsync($"A startup project is not set or no project is currently active");
+                await outputPane.WriteLineAsync("A startup project is not set or no project is currently active");
                 throw new ArgumentNullException("project", "A startup project is not set or no project is currently active");
             }
-            
+
             if (!project.IsCapabilityMatch(".NET"))
             {
                 await outputPane.WriteLineAsync($"Project {project.Name} is not .NET");
@@ -157,9 +157,9 @@ namespace LinuxSSHDebugger
                 }
 
                 // Install/Upgrade dotnet
-                await outputPane.WriteLineAsync($"NET: Verify installation");
+                await outputPane.WriteLineAsync("NET: Verify installation");
                 var deployment = "--runtime ";
-                
+
                 if (project.IsCapabilityMatch("DotNetCoreWeb"))
                 {
                     deployment += "aspnetcore";
@@ -188,7 +188,7 @@ namespace LinuxSSHDebugger
                 }
 
                 // Install vsdbg
-                await outputPane.WriteLineAsync($"VSDBG: Verify installation");
+                await outputPane.WriteLineAsync("VSDBG: Verify installation");
                 result = await ssh.CreateCommand($"curl -sSL https://aka.ms/getvsdbgsh | bash /dev/stdin -v latest -l {general.RemoteVsdbgInstallationFolder}").ExecuteAsync();
                 if (!(result.Contains("Info: Successfully installed vsdbg") || result.EndsWith("Info: Skipping downloads")))
                 {
@@ -197,7 +197,7 @@ namespace LinuxSSHDebugger
                     taskHandler.Progress.Report(taskProgressData);
                     return;
                 }
-                await outputPane.WriteLineAsync($"VSDBG: Installation succeeded");
+                await outputPane.WriteLineAsync("VSDBG: Installation succeeded");
                 taskProgressData.ProgressText = "Step 'VSDBG Install' completed";
                 taskHandler.Progress.Report(taskProgressData);
 
@@ -207,7 +207,7 @@ namespace LinuxSSHDebugger
                 }
 
                 // Create project folder if it does not exist
-                await outputPane.WriteLineAsync($"SSH: Creating folders");
+                await outputPane.WriteLineAsync("SSH: Creating folders");
                 var folder = $"{general.RemoteDeploymentFolder}/{project.Name}";
                 result = await ssh.CreateCommand($"if [ ! -d {folder} ]; then mkdir -p {folder}; else rm -r {folder}/*; fi").ExecuteAsync();
                 if (!string.IsNullOrEmpty(result))
@@ -226,7 +226,7 @@ namespace LinuxSSHDebugger
                     return;
                 }
 
-                await outputPane.WriteLineAsync($"SCP: Transferring files");
+                await outputPane.WriteLineAsync("SCP: Transferring files");
                 var directoryInfo = new DirectoryInfo($"{publishFolder}");
                 using (var scp = new ScpClient(general.SshHost, general.SshPortNumber, general.SshUser, privateKeys) { KeepAliveInterval = TimeSpan.FromSeconds(15), OperationTimeout = TimeSpan.FromSeconds(15) })
                 {
@@ -249,8 +249,8 @@ namespace LinuxSSHDebugger
                             scp.Disconnect();
                         }
                     }
-                };
-                await outputPane.WriteLineAsync($"SCP: File transfer succeeded");
+                }
+                await outputPane.WriteLineAsync("SCP: File transfer succeeded");
                 taskProgressData.ProgressText = "Step 'File Transfer' completed";
                 taskHandler.Progress.Report(taskProgressData);
 
@@ -259,7 +259,7 @@ namespace LinuxSSHDebugger
                     return;
                 }
 
-                await outputPane.WriteLineAsync($"JSON: Generating");
+                await outputPane.WriteLineAsync("JSON: Generating");
                 var assemblyName = await project.GetAttributeAsync("AssemblyName");
                 // Generate temporary launch.json
                 var json = new JsonObject
@@ -291,7 +291,7 @@ namespace LinuxSSHDebugger
                 try
                 {
                     File.AppendAllText(path, json.ToJsonString(new JsonSerializerOptions() { WriteIndented = true }), Encoding.UTF8);
-                    await outputPane.WriteLineAsync($"JSON: Generated successfuly");
+                    await outputPane.WriteLineAsync("JSON: Generated successfuly");
                     taskProgressData.ProgressText = "Step 'Generate launch.json' completed";
                     taskHandler.Progress.Report(taskProgressData);
 
@@ -303,7 +303,7 @@ namespace LinuxSSHDebugger
                     // Start debugging
                     if (!await VS.Commands.ExecuteAsync("DebugAdapterHost.Launch", $"/LaunchJson:\"{path}\""))
                     {
-                        await outputPane.WriteLineAsync($"VSDBG: Failed to launch the debugger ");
+                        await outputPane.WriteLineAsync("VSDBG: Failed to launch the debugger ");
                         taskProgressData.ProgressText = "Step 'Launch VSDBG' failed";
                         taskHandler.Progress.Report(taskProgressData);
                         return;

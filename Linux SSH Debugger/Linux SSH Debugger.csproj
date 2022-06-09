@@ -108,7 +108,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="SSH.NET">
-      <Version>2020.0.1</Version>
+      <Version>2020.0.2</Version>
     </PackageReference>
     <PackageReference Include="System.Text.Json">
       <Version>6.0.4</Version>
