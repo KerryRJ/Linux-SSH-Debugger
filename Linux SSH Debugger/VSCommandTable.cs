@@ -22,5 +22,6 @@ namespace LinuxSSHDebugger
     {
         public const int LinuxSSHDebuggerMenuGroup = 0x0001;
         public const int BuildPublishDebugCommand = 0x0100;
+        public const int DebugCommand = 0x0101;
     }
 }
